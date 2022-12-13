@@ -1,0 +1,44 @@
+version: "3"
+services:
+  bitcoin:
+    image: local/bitcoin
+    build:
+      dockerfile: Dockerfiles/Dockerfile.btc
+    container_name: bitcoin
+    restart: on-failure
+    ports:
+      - 18332:18332
+      - 18333:18333
+    volumes:
+      - "./persistent-data/testnet/bitcoin:/bitcoin"
+      - "./config/bitcoin.testnet.conf:/etc/bitcoin/bitcoin.conf"
+    networks:
+      - default
+  stacks-blockchain:
+    image: local/stacks
+    build:
+      dockerfile: Dockerfiles/Dockerfile.stacks
+    container_name: stacks-blockchain
+    restart: on-failure
+    ports:
+      - 20443:20443
+      - 20444:20444
+    volumes:
+      - "./persistent-data/testnet/stacks:/stacks-blockchain"
+      - "./config/stacks.testnet.follower.toml:/etc/stacks-blockchain/Config.toml"
+    networks:
+      - default
+    depends_on:
+      - bitcoin
+    command:
+      [
+        "/bin/stacks-node",
+        "start",
+        "--config",
+        "/etc/stacks-blockchain/Config.toml",
+      ]
+networks:
+  default:
+    name: stacks
+    ipam:
+      driver: default

@@ -1,0 +1,66 @@
+FROM debian:bullseye-slim as build
+
+ARG BTC_VERSION="23.0"
+ENV BDB_PREFIX="/src/bitcoin/db4"
+ENV BTC_VERSION="${BTC_VERSION}"
+
+WORKDIR /src
+
+RUN mkdir /out \
+    && apt-get update && apt-get install -y \
+        autoconf \
+        automake \
+        bsdextrautils \
+        build-essential \
+        cmake \
+        curl \
+        git \
+        libboost-chrono-dev \
+        libboost-dev \
+        libboost-filesystem-dev \
+        libboost-system-dev \
+        libboost-thread-dev \
+        libcapnp-dev \
+        libczmq-dev \
+        libevent-dev \
+        libsqlite3-dev \
+        libssl-dev \
+        libtool \
+        libzmq5 \
+        pkg-config \
+        sqlite3
+
+RUN git clone --depth 1 --branch v${BTC_VERSION} https://github.com/bitcoin/bitcoin \
+    && cd bitcoin \
+    && sh contrib/install_db4.sh . \
+    && ./autogen.sh \
+    && ./configure \
+        BDB_LIBS="-L${BDB_PREFIX}/lib -ldb_cxx-4.8" \
+        BDB_CFLAGS="-I${BDB_PREFIX}/include"  \
+        --disable-tests  \
+        --enable-static  \
+        --without-miniupnpc  \
+        --with-pic  \
+        --enable-cxx  \
+        --with-sqlite=yes  \
+        --with-gui=no  \
+        --enable-util-util=no  \
+        --enable-util-tx=no  \
+        --with-boost-libdir=/usr/lib/$(uname -m)-linux-gnu \
+        --bindir=/out \
+    && make -j2 \
+    && make install
+
+FROM debian:bullseye-slim
+
+RUN apt update && apt install -y \
+    netcat \
+    curl \
+    libevent-dev \
+    sqlite3 \
+    libzmq5 \
+    && mkdir /bitcoin
+
+COPY --from=build /out/ /bin/
+
+CMD ["/bin/bitcoind", "-server", "-datadir=/bitcoin", "-rpcuser=btcuser", "-rpcpassword=btcpass", "-rpcallowip=0.0.0.0/0", "-bind=0.0.0.0:8333", "-rpcbind=0.0.0.0:8332", "-dbcache=512", "-rpcthreads=256", "-disablewallet", "-txindex"]

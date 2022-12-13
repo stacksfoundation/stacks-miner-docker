@@ -1,0 +1,43 @@
+# generic ignores
+*.backup
+*.debug
+#*.json
+*.save
+crash.log
+*.retry
+*.so
+*.log
+*.swp
+.DS_Store
+*.pyc
+.gitconfig
+.idea
+
+# Vim-related files
+[._]*.s[a-w][a-z]
+[._]s[a-w][a-z]
+*.un~
+Session.vim
+.netrwhist
+
+# Vscode-specific files
+.vscode/
+
+*.secret
+*.save
+node_modules/
+stacks-node-follower/Config.toml
+configurations/*/Config.toml
+configurations/private-testnet/*.toml
+
+conf/*/Config.toml
+conf/*/Config-with-bitcoin-flag.toml
+conf/*/bitcoin.conf
+conf/private-testnet/*.toml
+conf/private-testnet/*.conf
+
+.env
+persistent-data/testnet/bitcoin/**
+persistent-data/testnet/stacks/**
+persistent-data/mainnet/bitcoin/**
+persistent-data/mainnet/stacks/**
